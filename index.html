@@ -5,43 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mathematics Is Easy</title>
 
+<!-- jsPDF for PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
-:root{
---bg:#f4f6f9;--card:#fff;--text:#333;--primary:#4CAF50;
-}
-.dark{
---bg:#121212;--card:#1e1e1e;--text:#f5f5f5;--primary:#81c784;
-}
-body{
-margin:0;font-family:Arial;background:var(--bg);color:var(--text);
-transition:0.3s;
-}
-header{
-background:linear-gradient(135deg,#4CAF50,#2e8b57);
-color:#fff;text-align:center;padding:30px;
-}
-nav{
-display:flex;justify-content:center;gap:10px;
-background:#222;padding:10px;flex-wrap:wrap;
-}
-nav button{
-background:var(--primary);border:none;color:#fff;
-padding:8px 12px;border-radius:5px;cursor:pointer;
-}
-section{padding:20px;max-width:1000px;margin:auto;}
-.card{
-background:var(--card);padding:20px;border-radius:10px;
-box-shadow:0 4px 8px rgba(0,0,0,.2);
-animation:fade 0.4s;
-}
-@keyframes fade{from{opacity:0;transform:scale(.95)}to{opacity:1}}
-.options button{
-display:block;width:100%;margin:8px 0;
-}
-.correct{background:#c8e6c9 !important}
-.wrong{background:#ffcdd2 !important}
-footer{text-align:center;background:#222;color:#fff;padding:15px}
+:root{--bg:#f4f6f9;--card:#fff;--text:#333;--pri:#4CAF50}
+.dark{--bg:#121212;--card:#1e1e1e;--text:#f5f5f5}
+body{margin:0;font-family:Arial;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#4CAF50,#2e8b57);color:#fff;text-align:center;padding:25px}
+nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;background:#222;padding:10px}
+nav button{background:var(--pri);border:none;color:#fff;padding:8px 12px;border-radius:5px}
+section{padding:20px;max-width:1000px;margin:auto}
+.card{background:var(--card);padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 4px 8px rgba(0,0,0,.2)}
+.options button{width:100%;margin:6px 0;padding:10px}
+.correct{background:#c8e6c9!important}
+.wrong{background:#ffcdd2!important}
 .hidden{display:none}
+footer{text-align:center;background:#222;color:#fff;padding:15px}
+iframe{width:100%;height:220px;border-radius:10px}
 </style>
 </head>
 
@@ -49,108 +30,160 @@ footer{text-align:center;background:#222;color:#fff;padding:15px}
 
 <header>
 <h1>Mathematics Is Easy 🧮</h1>
-<p id="tagline">Learn • Practice • Play</p>
+<p>Learn • Practice • Play</p>
 </header>
 
 <nav>
 <button onclick="toggleDark()">🌙 Dark</button>
-<button onclick="toggleSound()">🔊 Sound</button>
-<button onclick="toggleLang()">🌐 Lang</button>
-<button onclick="pauseGame()">⏸️ Pause</button>
+<button onclick="pauseGame()">⏸ Pause</button>
 <button onclick="restart()">🔁 Restart</button>
+<button onclick="openAdmin()">👨‍🏫 Admin</button>
 </nav>
 
-<section id="loginSection" class="card">
-<h2>Welcome 👋</h2>
-<input id="playerName" placeholder="Enter your name">
+<section id="login" class="card">
+<h2>Student Login</h2>
+<input id="playerName" placeholder="Enter your name" style="width:100%;padding:10px">
 <button onclick="startGame()">Start</button>
 </section>
 
-<section id="gameSection" class="hidden">
-<div class="card">
-<h3>Player: <span id="player"></span></h3>
-<h3>Level <span id="level">1</span></h3>
-<p id="question"></p>
-<div class="options" id="options"></div>
-<p>⏱️ <span id="time">10</span>s</p>
-<p>Score: <span id="score">0</span></p>
-</div>
+<section id="game" class="hidden">
 
 <div class="card">
-<h3>🏆 Leaderboard</h3>
-<ul id="board"></ul>
+<h3>Student: <span id="player"></span></h3>
+<p id="question"></p>
+<div class="options" id="options"></div>
+<p id="explain"></p>
+
+<!-- 🎥 VIDEO EXPLANATION -->
+<h4>📺 Video Explanation</h4>
+<iframe id="video" src=""></iframe>
+
+<p>⏱ <span id="time">10</span>s | Score: <span id="score">0</span></p>
 </div>
+
+<!-- 🧪 DAILY TEST -->
+<div class="card">
+<h3>🧪 Daily Test</h3>
+<p>Total Questions: <span id="totalQ"></span></p>
+<p>Correct: <span id="correctQ">0</span></p>
+<button onclick="downloadResult()">📄 Download Result Card (PDF)</button>
+</div>
+
+</section>
+
+<!-- 👨‍🏫 TEACHER ADMIN PANEL -->
+<section id="admin" class="card hidden">
+<h2>👨‍🏫 Teacher Admin Panel</h2>
+<input id="aq" placeholder="Question">
+<input id="a1" placeholder="Option A">
+<input id="a2" placeholder="Option B">
+<input id="a3" placeholder="Option C">
+<input id="a4" placeholder="Option D">
+<input id="ac" placeholder="Correct Option (0-3)">
+<input id="ae" placeholder="Explanation">
+<input id="av" placeholder="YouTube Embed Link">
+<button onclick="addQuestion()">➕ Add Question</button>
 </section>
 
 <footer>© 2025 Mathematics Is Easy</footer>
 
-<audio id="ok" src="https://www.soundjay.com/buttons/sounds/button-4.mp3"></audio>
-<audio id="bad" src="https://www.soundjay.com/buttons/sounds/button-10.mp3"></audio>
-
 <script>
-let dark=false,sound=true,lang="en";
-let level=1,score=0,time=10,timer,paused=false;
+let dark=false,paused=false;
+let score=0,time=10,timer,currentQ;
+let correctCount=0;
 let name="";
+
 const qs=[
-{q:["5+3=?","5+3=?"],o:["6","7","8","9"],a:2},
-{q:["12÷4=?","12÷4=?"],o:["2","3","4","5"],a:1},
-{q:["3/4 × 2/3 = ?","3/4 × 2/3 = ?"],o:["1/2","1/3","2/3","3/4"],a:0}
+{
+q:"5 + 3 = ?",
+o:["6","7","8","9"],
+a:2,
+e:"5 + 3 = 8",
+v:"https://www.youtube.com/embed/d0yGdNEWdn0"
+},
+{
+q:"(a+b)² formula?",
+o:["a²+b²","a²+2ab+b²","2a²","a²-b²"],
+a:1,
+e:"Standard identity formula",
+v:"https://www.youtube.com/embed/2Z9nGzR3rV0"
+}
 ];
 
 function startGame(){
-name=playerName.value||"Player";
+name=playerName.value||"Student";
 player.innerText=name;
-loginSection.classList.add("hidden");
-gameSection.classList.remove("hidden");
+login.classList.add("hidden");
+game.classList.remove("hidden");
+totalQ.innerText=qs.length;
 loadQ();
 }
+
 function loadQ(){
-let q=qs[Math.floor(Math.random()*qs.length)];
-question.innerText=q.q[lang==="en"?0:1];
+currentQ=qs[Math.floor(Math.random()*qs.length)];
+question.innerText=currentQ.q;
+video.src=currentQ.v;
 options.innerHTML="";
-q.o.forEach((op,i)=>{
+explain.innerText="";
+currentQ.o.forEach((op,i)=>{
 let b=document.createElement("button");
 b.innerText=op;
-b.onclick=()=>check(i,q.a,b);
+b.onclick=()=>check(i,b);
 options.appendChild(b);
 });
-time=10;timeEl();
-}
-function check(i,a,b){
+time=10;timeSpan.innerText=time;
 clearInterval(timer);
-if(i===a){score+=10;b.classList.add("correct");if(sound)ok.play();}
-else{b.classList.add("wrong");if(sound)bad.play();}
-setTimeout(loadQ,800);
-save();
-}
-function timeEl(){
-timeSpan.innerText=time;
 timer=setInterval(()=>{
 if(!paused){time--;timeSpan.innerText=time;if(time<=0){clearInterval(timer);loadQ();}}
 },1000);
 }
+
+function check(i,b){
+clearInterval(timer);
+if(i===currentQ.a){
+score+=10;
+correctCount++;
+correctQ.innerText=correctCount;
+b.classList.add("correct");
+explain.innerText="✅ "+currentQ.e;
+}else{
+b.classList.add("wrong");
+explain.innerText="❌ "+currentQ.e;
+}
+scoreSpan.innerText=score;
+setTimeout(loadQ,1500);
+}
+
+function downloadResult(){
+const { jsPDF } = window.jspdf;
+const pdf=new jsPDF();
+pdf.text("Student: "+name,10,10);
+pdf.text("Score: "+score,10,20);
+pdf.text("Correct Answers: "+correctCount,10,30);
+pdf.save("ResultCard.pdf");
+}
+
 function toggleDark(){dark=!dark;document.body.classList.toggle("dark")}
-function toggleSound(){sound=!sound}
-function toggleLang(){lang=lang==="en"?"hi":"en";tagline.innerText=lang==="en"?"Learn • Practice • Play":"सीखें • अभ्यास • खेलें"}
 function pauseGame(){paused=!paused}
 function restart(){location.reload()}
-function save(){
-let data=JSON.parse(localStorage.getItem("mathBoard")||"[]");
-data.push({name,score});
-localStorage.setItem("mathBoard",JSON.stringify(data));
-renderBoard();
+
+function openAdmin(){
+admin.classList.toggle("hidden");
 }
-function renderBoard(){
-let data=JSON.parse(localStorage.getItem("mathBoard")||"[]");
-board.innerHTML="";
-data.slice(-5).reverse().forEach(d=>{
-let li=document.createElement("li");
-li.innerText=`${d.name} : ${d.score}`;
-board.appendChild(li);
+
+function addQuestion(){
+qs.push({
+q:aq.value,
+o:[a1.value,a2.value,a3.value,a4.value],
+a:Number(ac.value),
+e:ae.value,
+v:av.value
 });
+alert("Question Added Successfully");
 }
+
 const timeSpan=document.getElementById("time");
-renderBoard();
+const scoreSpan=document.getElementById("score");
 </script>
 
 </body>
